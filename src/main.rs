@@ -20,6 +20,7 @@ use uuidcrate::Uuid;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::env;
 
 struct IndexFile<> {
 	path: DirEntry,
@@ -206,7 +207,13 @@ fn should_index(connection: &SqliteConnection, file: &IndexFile) -> IndexAction 
 fn main() {
 	env_logger::init().unwrap();
 
-	let walkdir = WalkDir::new("/home/alex/Round")
+	let args: Vec<String> = env::args().collect();
+
+	if args.len() == 1 {
+		panic!("Missing path to cuecard collection");
+	}
+
+	let walkdir = WalkDir::new(args[1].clone())
 		.min_depth(2).into_iter().filter_map(|e| e.ok())
 		.filter(|e|is_allowed(e));
 
