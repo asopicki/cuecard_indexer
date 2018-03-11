@@ -1,0 +1,16 @@
+name: cuecard_indexer
+version: "0.2.0"
+author: Alexander Sopicki <asopicki@gmail.com>
+about: Creates an index of cuecards in a Sqlite database
+args:
+    - database:
+        long: database
+        short: d
+        help: Sets the path to the databbase to use
+        required: false
+        takes_value: true
+        value_name: database
+    - INPUT:
+        help: Sets the directory for the cuecard collection
+        required: true
+        index: 1
