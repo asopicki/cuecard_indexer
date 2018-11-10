@@ -1,4 +1,3 @@
-#![feature(fs_read_write)]
 extern crate diesel;
 extern crate walkdir;
 extern crate regex;
@@ -72,7 +71,7 @@ fn process(entry: DirEntry) -> IndexFile {
 	}
 
 	let filename = entry.path().to_str().unwrap().to_owned();
-	let content = std::fs::read_string(entry.path()).unwrap();
+	let content = std::fs::read_to_string(entry.path()).unwrap();
 	let mut index_file = IndexFile { path: entry, content: "".to_owned(), meta: HashMap::new() };
 	let mut has_title = false;
 
@@ -161,7 +160,7 @@ fn update(connection: &SqliteConnection, file: &IndexFile) {
 	let empty = "".to_string();
 
 	let indexfile = file.index_file(file).unwrap();
-	let fileuuid = std::fs::read_string(indexfile).unwrap();
+	let fileuuid = std::fs::read_to_string(indexfile).unwrap();
 
 	let result = cuecards.filter(uuid.eq(fileuuid.clone())).load::<Cuecard>(connection).unwrap();
 
@@ -203,7 +202,7 @@ fn should_index(connection: &SqliteConnection, file: &IndexFile) -> IndexAction 
 			debug!("File {:?} has been modified since last index run. Will update.", file.path);
 			return IndexAction::Update;
 		} else {
-			let fileuuid = std::fs::read_string(indexfile).unwrap();
+			let fileuuid = std::fs::read_to_string(indexfile).unwrap();
 			let result = cuecards.filter(uuid.eq(fileuuid.clone())).load::<Cuecard>(connection).unwrap();
 			if result.is_empty() {
 				debug!("UUID {} not found in database. Will reindex the file {:?}.", fileuuid, file.path);
