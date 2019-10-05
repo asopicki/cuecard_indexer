@@ -1,15 +1,12 @@
 #[macro_use]
 extern crate clap;
 extern crate env_logger;
-extern crate dotenv;
 extern crate cuecard_indexer;
-use dotenv::*;
 use std::env;
 
 fn main() {
 	use clap::App;
-	env_logger::init().unwrap();
-	dotenv().ok();
+	env_logger::init();
 
 	let yml = load_yaml!("cli.yml");
 	let matches = App::from_yaml(yml).get_matches();

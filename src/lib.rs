@@ -19,6 +19,7 @@ use uuidcrate::Uuid;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::vec::Vec;
 
 pub struct Config {
 	pub basepath: String,
@@ -136,7 +137,7 @@ fn index(connection: &SqliteConnection, file: &IndexFile) {
 	let empty = "".to_string();
 
 	let values = CuecardData {
-		uuid: &u.hyphenated().to_string(),
+		uuid: &u.to_hyphenated().to_string(),
 		phase: file.get_meta("phase".to_string()).unwrap_or(&unphased),
 		rhythm: file.get_meta("rhythm".to_string()).unwrap_or(&unknown),
 		title: file.get_meta("title".to_string()).unwrap_or(&unknown),
@@ -150,7 +151,7 @@ fn index(connection: &SqliteConnection, file: &IndexFile) {
 
 	let index_file = file.index_file(file).unwrap();
 
-	std::fs::write(index_file, u.hyphenated().to_string()).unwrap();
+	std::fs::write(index_file, u.to_hyphenated().to_string()).unwrap();
 }
 
 fn update(connection: &SqliteConnection, file: &IndexFile) {
@@ -162,7 +163,12 @@ fn update(connection: &SqliteConnection, file: &IndexFile) {
 	let indexfile = file.index_file(file).unwrap();
 	let fileuuid = std::fs::read_to_string(indexfile).unwrap();
 
-	let result = cuecards.filter(uuid.eq(fileuuid.clone())).load::<Cuecard>(connection).unwrap();
+	let result = cuecards.filter(uuid.eq(fileuuid.clone())).load::<Cuecard>(connection).unwrap_or(Vec::new());
+
+	if result.is_empty() {
+		error!("Index file found but no related cuecard in the database. Remove stale indexfile {:?} and reindex", file.index_file(file).unwrap());
+		return;
+	}
 
 	let cuecard = result.get(0).unwrap();
 
