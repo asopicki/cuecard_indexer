@@ -14,8 +14,8 @@ serde_json = "^1.0"
 uuid = { version = "^0.7", features = ["v4"] }
 log = "^0.4"
 env_logger = "^0.7"
-#cuer_database = { version = "^0.3", git="https://github.com/asopicki/cuer_database.git" }
-cuer_database = { version = "^0.5", path="../cuer_database" }
+cuer_database = { version = "^0.5", git="https://github.com/asopicki/cuer_database.git" }
+#cuer_database = { version = "^0.5", path="../cuer_database" }
 
 [dependencies.clap]
 features = ["yaml"]
