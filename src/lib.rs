@@ -8,18 +8,20 @@ extern crate lazy_static;
 extern crate log;
 extern crate uuid as uuidcrate;
 extern crate cuer_database;
-
+extern crate filetime;
 
 use self::cuer_database::*;
 use self::models::*;
 use self::diesel::prelude::*;
 use self::walkdir::{WalkDir, DirEntry};
+use filetime::{FileTime, set_file_mtime};
 use regex::Regex;
 use uuidcrate::Uuid;
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::vec::Vec;
+use std::time::SystemTime;
 
 pub struct Config {
 	pub basepath: String,
@@ -185,6 +187,9 @@ fn update(connection: &SqliteConnection, file: &IndexFile) {
 	};
 
 	values.update(cuecard, connection).unwrap();
+	let indexfile = file.index_file(file).unwrap();
+	let filetime = FileTime::from_system_time(SystemTime::now());
+	set_file_mtime(indexfile, filetime).unwrap();
 }
 
 #[derive(PartialEq, Eq, Debug)]
@@ -248,15 +253,15 @@ pub fn run(config: &Config) {
 	for file in files {
 		match should_index(&connection, &file) {
 			IndexAction::Update => {
-				info!("Reindexing file: {:?}", file.path.path().file_name());
+				info!("Reindexing file: {:?}", file.path.path().file_name().unwrap());
 				update(&connection, &file);
 			},
 			IndexAction::Index => {
-				info!("Indexing new file: {:?}", file.path.path().file_name());
+				info!("Indexing new file: {:?}", file.path.path().file_name().unwrap());
 				index(&connection, &file);
 			},
 			_ => {
-				debug!("File not modified: {:?}", file.path.path().file_name());
+				debug!("File not modified: {:?}", file.path.path().file_name().unwrap());
 			}
 		}
 	}
