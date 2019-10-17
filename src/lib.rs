@@ -147,7 +147,9 @@ fn index(connection: &SqliteConnection, file: &IndexFile) {
 		steplevel: file.get_meta("steplevel".to_string()).unwrap_or(&empty),
 		difficulty: file.get_meta("difficulty".to_string()).unwrap_or(&empty),
 		meta: &serde_json::to_string(&file.meta).unwrap_or("{}".to_string()),
-		content: &file.content
+		content: &file.content,
+		karaoke_marks: "",
+		music_file: ""
 	};
 	values.create(connection).unwrap();
 
@@ -183,7 +185,9 @@ fn update(connection: &SqliteConnection, file: &IndexFile) {
 		steplevel: file.get_meta("steplevel".to_string()).unwrap_or(&empty),
 		difficulty: file.get_meta("difficulty".to_string()).unwrap_or(&empty),
 		meta: &serde_json::to_string(&file.meta).unwrap_or("{}".to_string()),
-		content: &file.content
+		content: &file.content,
+		karaoke_marks: "",
+		music_file: ""
 	};
 
 	values.update(cuecard, connection).unwrap();
