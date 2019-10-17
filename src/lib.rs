@@ -32,6 +32,7 @@ struct IndexFile<> {
 	path: DirEntry,
 	content: String,
 	meta: HashMap<String, String>,
+	audio_file: String
 }
 
 impl IndexFile {
@@ -71,11 +72,12 @@ fn process(entry: DirEntry) -> IndexFile {
 		static ref TITLE_PATTERN: Regex = Regex::new(r"^#\s+(?P<title>.*)$").unwrap();
 		static ref META_PATTERN: Regex = Regex::new(r"^[\*]\s+[\*][\*](?P<metaname>\w+)[\*][\*]:\s+(?P<metatext>.*)$").unwrap();
 		static ref PHASE_PATTERN: Regex = Regex::new(r"^(I|II|III|IV|V|VI)\s*(\+.*)?$").unwrap();
+		static ref AUDIO_FILE_PATTERN: Regex = Regex::new("^<meta\\s+name=\"x:audio-file\"\\s+content=\"(?P<filename>.*)\">").unwrap();
 	}
 
 	let filename = entry.path().to_str().unwrap().to_owned();
 	let content = std::fs::read_to_string(entry.path()).unwrap();
-	let mut index_file = IndexFile { path: entry, content: "".to_owned(), meta: HashMap::new() };
+	let mut index_file = IndexFile { path: entry, content: "".to_owned(), meta: HashMap::new(), audio_file: "".to_owned() };
 	let mut has_title = false;
 
 	for line in content.lines() {
@@ -98,6 +100,15 @@ fn process(entry: DirEntry) -> IndexFile {
 			},
 			_ => ()
 		}
+
+		let result = AUDIO_FILE_PATTERN.captures(line);
+		match result {
+			Some(caps) => {
+				let filename = caps.name("filename").unwrap().as_str();
+				index_file.audio_file = filename.to_string();
+			},
+			_ => ()
+		} 
 	}
 	index_file.set_content(&content);
 
@@ -149,7 +160,7 @@ fn index(connection: &SqliteConnection, file: &IndexFile) {
 		meta: &serde_json::to_string(&file.meta).unwrap_or("{}".to_string()),
 		content: &file.content,
 		karaoke_marks: "",
-		music_file: ""
+		music_file: &file.audio_file
 	};
 	values.create(connection).unwrap();
 
@@ -187,7 +198,7 @@ fn update(connection: &SqliteConnection, file: &IndexFile) {
 		meta: &serde_json::to_string(&file.meta).unwrap_or("{}".to_string()),
 		content: &file.content,
 		karaoke_marks: "",
-		music_file: ""
+		music_file: &file.audio_file
 	};
 
 	values.update(cuecard, connection).unwrap();
